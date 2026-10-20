@@ -1,0 +1,24 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 40px;
+    background: #f3f4f6;
+}
+
+h1{
+    margin: 20px;
+    color: #000000;
+    height: 30px;
+}
+
+.titulo{
+    display: flex;
+    gap: 65rem;
+    justify-content: space-evenly;
+}
+
+
+#logo {
+    display: flex;
+    size: 50px;
+    height: 80px;
+}

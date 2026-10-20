@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Materiais</title>
+
+    <link rel="stylesheet" href="../static/main.css">
+</head>
+<body>
+    <div class="titulo">
+        <h1>Sistema de Materiais</h1>
+        <img id="logo" src="../static/img/logo.hp.png" alt="Logo">
+    </div>
+
+    {% with mensagens = get_flashed_messages() %}
+        {% for mensagem in mensagens %}
+            <p><strong>{{ mensagem }}</strong></p>
+        {% endfor %}
+    {% endwith %}
+
+    <h2>Adicionar produto</h2>
+    <form action="{{ url_for('adicionar_produto') }}" method="post">
+        <input type="text" name="nome" placeholder="Nome do produto" required>
+
+        <label>
+            <input type="checkbox" name="tem_barras"> Já possui código de barras
+        </label>
+
+        <input type="text" name="codigo_barras" placeholder="Código de barras original">
+
+        <button type="submit">Cadastrar</button>
+    </form>
+
+    <h2>Produtos cadastrados</h2>
+    <table border="1" cellpadding="6">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nome</th>
+                <th>Tem código de barras?</th>
+                <th>Código de barras</th>
+                <th>Ação</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for produto in materiais %}
+            <tr>
+                <td>{{ produto.codigo }}</td>
+                <td>{{ produto.nome }}</td>
+                <td>{{ "Sim" if produto.tem_barras else "Não" }}</td>
+                <td>{{ produto.codigo_barras }}</td>
+                <td>
+                    <form action="{{ url_for('excluir_material', material_id=produto.id) }}" method="post"
+                          onsubmit="return confirm('Deseja excluir este material?');">
+                        <button type="submit">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p>Total: {{ materiais|length }}</p>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
