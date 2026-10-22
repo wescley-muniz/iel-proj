@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="../static/main.css">
 </head>
 <body>
-    <div class="titulo">
-        <h1>Sistema de Materiais</h1>
+    <div class="container">
+       <strong><h1 class="sis">Sistema de Materiais</h1></strong>
         <img id="logo" src="../static/img/logo.hp.png" alt="Logo">
     </div>
 
@@ -19,21 +19,49 @@
         {% endfor %}
     {% endwith %}
 
+    <h2>Leitura de código de barras</h2>
+    <p>Um código já cadastrado exclui o material; um código novo solicita o nome para cadastrá-lo.</p>
+    <p>Para usar a câmera do celular, abra o sistema por uma conexão HTTPS segura.</p>
+    <div class="scanner-camera">
+        <button class="cadbuttom" id="start-camera" type="button">Ler com a câmera</button>
+        <button class="excluir" id="stop-camera" type="button" hidden>Fechar câmera</button>
+        <div id="camera-container" hidden>
+            <div id="barcode-reader"></div>
+        </div>
+        <p id="camera-status" role="status" aria-live="polite"></p>
+    </div>
+    <form id="barcode-form" action="{{ url_for('ler_codigo_barras') }}" method="post">
+        <input class="input" id="barcode-input" type="text" name="codigo_barras"
+               placeholder="Leia o código de barras" autocomplete="off" required
+               {% if not codigo_pendente %}autofocus{% endif %}>
+        <button class="cadbuttom" type="submit">Ler código</button>
+    </form>
+
+    {% if codigo_pendente %}
+    <form action="{{ url_for('adicionar_material_lido') }}" method="post">
+        <p>Código lido: <strong>{{ codigo_pendente }}</strong></p>
+        <input type="hidden" name="codigo_barras" value="{{ codigo_pendente }}">
+        <input class="input" type="text" name="nome"
+               placeholder="Nome do material" required autofocus>
+        <button class="cadbuttom" type="submit">Cadastrar material lido</button>
+    </form>
+    {% endif %}
+
     <h2>Adicionar produto</h2>
     <form action="{{ url_for('adicionar_produto') }}" method="post">
-        <input type="text" name="nome" placeholder="Nome do produto" required>
+        <input  class="input" type="text" name="nome" placeholder="Nome do produto" required>
 
-        <label>
-            <input type="checkbox" name="tem_barras"> Já possui código de barras
+        <label >
+            <input class="very" type="checkbox" name="tem_barras"> Já possui código de barras
         </label>
 
-        <input type="text" name="codigo_barras" placeholder="Código de barras original">
+        <input class="input" type="text" name="codigo_barras" placeholder="Código de barras original">
 
-        <button type="submit">Cadastrar</button>
+        <button class="cadbuttom" type="submit">Cadastrar</button>
     </form>
 
     <h2>Produtos cadastrados</h2>
-    <table border="1" cellpadding="6">
+    <table class="table" border="1" cellpadding="6">
         <thead>
             <tr>
                 <th>Código</th>
@@ -53,7 +81,7 @@
                 <td>
                     <form action="{{ url_for('excluir_material', material_id=produto.id) }}" method="post"
                           onsubmit="return confirm('Deseja excluir este material?');">
-                        <button type="submit">Excluir</button>
+                        <button class="excluir" type="submit">Excluir</button>
                     </form>
                 </td>
             </tr>
@@ -63,6 +91,7 @@
 
     <p>Total: {{ materiais|length }}</p>
 
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script defer src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script defer src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>

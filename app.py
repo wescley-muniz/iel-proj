@@ -40,6 +40,27 @@ def conectar_banco():
     return connection
 
 
+def gerar_codigo_barras(connection, material_id):
+    primeiro_numero = material_id
+    ultimo_numero = 100_000_000_000
+
+    for numero in range(primeiro_numero, ultimo_numero):
+        base = f"2{numero:011d}"
+        soma = sum(int(digito) for digito in base[::2])
+        soma += 3 * sum(int(digito) for digito in base[1::2])
+        digito_verificador = (-soma) % 10
+        codigo_barras = f"{base}{digito_verificador}"
+
+        existente = connection.execute(
+            "SELECT 1 FROM materiais WHERE codigo_barras = ?",
+            (codigo_barras,),
+        ).fetchone()
+        if existente is None:
+            return codigo_barras
+
+    raise RuntimeError("Não foi possível gerar um código de barras exclusivo.")
+
+
 def inicializar_banco():
     os.makedirs(app.instance_path, exist_ok=True)
     connection = conectar_banco()
@@ -67,6 +88,24 @@ def inicializar_banco():
                         (material["nome"], material["tem_barras"])
                         for material in materiais_iniciais
                     ],
+                )
+
+            materiais_sem_codigo = connection.execute(
+                """
+                SELECT id FROM materiais
+                WHERE TRIM(COALESCE(codigo_barras, '')) = ''
+                ORDER BY id
+                """
+            ).fetchall()
+            for material in materiais_sem_codigo:
+                codigo_barras = gerar_codigo_barras(connection, material["id"])
+                connection.execute(
+                    """
+                    UPDATE materiais
+                    SET codigo_barras = ?, tem_barras = 1
+                    WHERE id = ?
+                    """,
+                    (codigo_barras, material["id"]),
                 )
     finally:
         connection.close()
@@ -101,6 +140,84 @@ def inicio():
     return render_template("main.html", materiais=materiais)
 
 
+@app.route("/ler-codigo", methods=["POST"])
+def ler_codigo_barras():
+    codigo_barras = request.form.get("codigo_barras", "").strip()
+    if not codigo_barras:
+        flash("Leia um código de barras antes de continuar.")
+        return redirect(url_for("inicio"))
+
+    connection = conectar_banco()
+    try:
+        with connection:
+            material = connection.execute(
+                "SELECT id, nome FROM materiais WHERE codigo_barras = ?",
+                (codigo_barras,),
+            ).fetchone()
+
+            if material is not None:
+                connection.execute(
+                    "DELETE FROM materiais WHERE id = ?",
+                    (material["id"],),
+                )
+    finally:
+        connection.close()
+
+    if material is not None:
+        flash(f"{material['nome']} foi excluído do cadastro pela leitura do código.")
+        return redirect(url_for("inicio"))
+
+    flash("Código não cadastrado. Informe o nome para cadastrar esse material.")
+    return render_template(
+        "main.html",
+        materiais=listar_materiais(),
+        codigo_pendente=codigo_barras,
+    )
+
+
+@app.route("/adicionar-lido", methods=["POST"])
+def adicionar_material_lido():
+    nome = request.form.get("nome", "").strip()
+    codigo_barras = request.form.get("codigo_barras", "").strip()
+
+    if not nome or not codigo_barras:
+        flash("Informe o nome do material e leia novamente o código.")
+        return redirect(url_for("inicio"))
+
+    connection = conectar_banco()
+    try:
+        with connection:
+            existente = connection.execute(
+                """
+                SELECT nome FROM materiais
+                WHERE codigo_barras = ? OR nome = ? COLLATE NOCASE
+                """,
+                (codigo_barras, nome),
+            ).fetchone()
+            if existente is not None:
+                if existente["nome"].lower() == nome.lower():
+                    flash("Esse material já está cadastrado.")
+                else:
+                    flash("Esse código de barras já está associado a outro material.")
+                return redirect(url_for("inicio"))
+
+            connection.execute(
+                """
+                INSERT INTO materiais (nome, tem_barras, codigo_barras)
+                VALUES (?, 1, ?)
+                """,
+                (nome, codigo_barras),
+            )
+    except sqlite3.IntegrityError:
+        flash("Não foi possível cadastrar: o material já existe.")
+        return redirect(url_for("inicio"))
+    finally:
+        connection.close()
+
+    flash(f"{nome} cadastrado com o código de barras {codigo_barras}.")
+    return redirect(url_for("inicio"))
+
+
 @app.route("/adicionar", methods=["POST"])
 def adicionar_produto():
     nome = request.form.get("nome", "").strip()
@@ -123,6 +240,15 @@ def adicionar_produto():
             flash("Esse produto já está cadastrado.")
             return redirect(url_for("inicio"))
 
+        if codigo_barras:
+            codigo_existente = connection.execute(
+                "SELECT 1 FROM materiais WHERE codigo_barras = ?",
+                (codigo_barras,),
+            ).fetchone()
+            if codigo_existente is not None:
+                flash("Esse código de barras já está cadastrado.")
+                return redirect(url_for("inicio"))
+
         with connection:
             cursor = connection.execute(
                 """
@@ -135,14 +261,28 @@ def adicionar_produto():
                     codigo_barras if tem_barras else "",
                 ),
             )
-            codigo = f"MAT-{cursor.lastrowid:04d}"
+            material_id = cursor.lastrowid
+            if not codigo_barras or not tem_barras:
+                codigo_barras = gerar_codigo_barras(connection, material_id)
+                connection.execute(
+                    """
+                    UPDATE materiais
+                    SET codigo_barras = ?, tem_barras = 1
+                    WHERE id = ?
+                    """,
+                    (codigo_barras, material_id),
+                )
+            codigo = f"MAT-{material_id:04d}"
     except sqlite3.IntegrityError:
         flash("Esse produto já está cadastrado.")
         return redirect(url_for("inicio"))
     finally:
         connection.close()
 
-    flash(f"Produto cadastrado! Código interno: {codigo}")
+    flash(
+        f"Produto cadastrado! Código interno: {codigo}. "
+        f"Código de barras: {codigo_barras}"
+    )
     return redirect(url_for("inicio"))
 
 
