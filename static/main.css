@@ -1,27 +1,32 @@
 body {
     font-family: Arial, sans-serif;
-    margin: 40px;
-    background: #feffff;
+    margin: 0;
+    background: #f8f3f0;
+    color: #020202b9;
 }
 
 .sis{
     margin: 15px;
-    color: #000000;
-    font-size: 2.7rem;
+    color: #020202bb;
+    font-size: 2.9rem;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif
 }
 
 .container {
-   display: flex;
+    display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    
+    padding: 20px 0;
+    background-color: rgb(230, 224, 214);
+    border: 0.7px solid #c9c2b0;                      
 }
 
 #logo {
     display: flex;
      width: 18rem;
     height: auto;
+    margin-right: 26px;
 }
 
 .input{
@@ -47,6 +52,16 @@ body {
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.cadbuttom:hover {
+    background-color: #3f9c43;
+    transform: scale(1.03);
+}
+
+.conteudo{
+    margin: 24px 40px;
 }
 
 table {
@@ -62,6 +77,12 @@ table {
     border: none;
     border-radius: 4px;
     cursor: pointer;
+   transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.excluir:hover {
+    background-color: #da190b;
+    transform: scale(1.03);
 }
 
 .scanner-camera {
