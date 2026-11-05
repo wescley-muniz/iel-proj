@@ -33,12 +33,10 @@ materiais_iniciais = [
     {"nome": "Ropi 10 ml", "tem_barras": False},
 ]
 
-
 def conectar_banco():
     connection = sqlite3.connect(app.config["DATABASE"])
     connection.row_factory = sqlite3.Row
     return connection
-
 
 def gerar_codigo_barras(connection, material_id):
     primeiro_numero = material_id
@@ -59,7 +57,6 @@ def gerar_codigo_barras(connection, material_id):
             return codigo_barras
 
     raise RuntimeError("Não foi possível gerar um código de barras exclusivo.")
-
 
 def inicializar_banco():
     os.makedirs(app.instance_path, exist_ok=True)
@@ -110,7 +107,6 @@ def inicializar_banco():
     finally:
         connection.close()
 
-
 def listar_materiais():
     connection = conectar_banco()
     try:
@@ -132,7 +128,6 @@ def listar_materiais():
 
 
 inicializar_banco()
-
 
 @app.route("/")
 def inicio():
@@ -173,7 +168,6 @@ def ler_codigo_barras():
         materiais=listar_materiais(),
         codigo_pendente=codigo_barras,
     )
-
 
 @app.route("/adicionar-lido", methods=["POST"])
 def adicionar_material_lido():
@@ -216,7 +210,6 @@ def adicionar_material_lido():
 
     flash(f"{nome} cadastrado com o código de barras {codigo_barras}.")
     return redirect(url_for("inicio"))
-
 
 @app.route("/adicionar", methods=["POST"])
 def adicionar_produto():
@@ -285,7 +278,6 @@ def adicionar_produto():
     )
     return redirect(url_for("inicio"))
 
-
 @app.route("/excluir/<int:material_id>", methods=["POST"])
 def excluir_material(material_id):
     connection = conectar_banco()
@@ -304,7 +296,6 @@ def excluir_material(material_id):
     else:
         flash("Esse material não foi encontrado.")
     return redirect(url_for("inicio"))
-
 
 if __name__ == "__main__":
     app.run(debug=True)

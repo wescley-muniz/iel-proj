@@ -4,97 +4,218 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Materiais</title>
-
-    <link rel="stylesheet" href="../static/main.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/icone (2).png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
 </head>
 <body>
-    <div class="container">
-       <h1 class="sis">Sistema de Materiais</h1>
-        <img id="logo" src="../static/img/logo.hp.png" alt="Logo">
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand" href="#painel" aria-label="IEL Hospital Português — início">
+                <img id="logo" src="{{ url_for('static', filename='img/logo.hp.png') }}" alt="IEL Hospital Português">
+            </a>
+            <p class="sidebar-label">ESPAÇO DE TRABALHO</p>
+            <nav class="sidebar-nav" aria-label="Navegação principal">
+                <a class="nav-link active" href="#painel"><span class="nav-icon overview-icon"></span>Visão geral</a>
+                <a class="nav-link" href="#leitura"><span class="nav-icon scan-icon"></span>Leitura de código</a>
+                <a class="nav-link" href="#novo-material"><span class="nav-icon add-icon"></span>Adicionar material</a>
+                <a class="nav-link" href="#catalogo"><span class="nav-icon list-icon"></span>Materiais cadastrados</a>
+            </nav>
+            <div class="sidebar-footer">
+                <span class="status-dot"></span>
+                <span>Banco de dados local</span>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">GESTÃO DE ESTOQUE</p>
+                    <h1>Controle de materiais</h1>
+                </div>
+                <div class="topbar-actions">
+                    <button class="theme-toggle" id="theme-toggle" type="button"
+                        aria-label="Alternar para tema claro" title="Alternar para tema claro">
+                        <span class="theme-icon" aria-hidden="true"></span>
+                        <span class="theme-label">Tema claro</span>
+                    </button>
+                    <span class="system-status"><span class="status-dot"></span>Sistema ativo</span>
+                </div>
+            </header>
+
+            {% with mensagens = get_flashed_messages() %}
+                {% if mensagens %}
+                <div class="flash-list" role="status" aria-live="polite">
+                    {% for mensagem in mensagens %}
+                    <p class="flash-message">{{ mensagem }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            <section class="overview" id="painel">
+                <div>
+                    <p class="eyebrow">PAINEL PRINCIPAL</p>
+                    <h2>Visão geral</h2>
+                    <p>Acompanhe e gerencie os materiais cadastrados no sistema.</p>
+                </div>
+                <a class="primary-link" href="#novo-material">＋ Novo material</a>
+            </section>
+
+            {% set materiais_com_codigo = materiais | map(attribute='tem_barras') | sum %}
+            <section class="stats-grid" aria-label="Resumo dos materiais">
+                <article class="stat-card">
+                    <div class="stat-icon blue-icon">M</div>
+                    <div>
+                        <p>Total de materiais</p>
+                        <strong>{{ materiais | length }}</strong>
+                    </div>
+                    <span class="stat-decoration"></span>
+                </article>
+                <article class="stat-card">
+                    <div class="stat-icon green-icon">#</div>
+                    <div>
+                        <p>Com código de barras</p>
+                        <strong>{{ materiais_com_codigo }}</strong>
+                    </div>
+                    <span class="stat-decoration"></span>
+                </article>
+                <article class="stat-card helper-card">
+                    <div class="stat-icon purple-icon">i</div>
+                    <div>
+                        <p>Leitura rápida</p>
+                        <strong>Pronta para usar</strong>
+                        <span class="stat-caption">Use a câmera ou um leitor conectado.</span>
+                    </div>
+                </article>
+            </section>
+
+            <section class="dashboard-grid">
+                <article class="panel" id="leitura">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">ENTRADA E SAÍDA</p>
+                            <h2>Leitura de código de barras</h2>
+                        </div>
+                        <span class="panel-mark scan-mark"></span>
+                    </div>
+                    <p class="panel-description">Um código cadastrado exclui o material. Um código novo permite cadastrar um material.</p>
+                    <p class="notice">Para usar a câmera do celular, abra o sistema por uma conexão HTTPS segura.</p>
+
+                    <div class="scanner-camera">
+                        <div class="button-row">
+                            <button class="cadbuttom secondary-button" id="start-camera" type="button">Ler com a câmera</button>
+                            <button class="excluir" id="stop-camera" type="button" hidden>Fechar câmera</button>
+                        </div>
+                        <div id="camera-container" hidden>
+                            <div id="barcode-reader"></div>
+                        </div>
+                        <p id="camera-status" role="status" aria-live="polite"></p>
+                    </div>
+
+                    <form class="form-row" id="barcode-form" action="{{ url_for('ler_codigo_barras') }}" method="post">
+                        <input class="input" id="barcode-input" type="text" name="codigo_barras"
+                            placeholder="Leia ou digite o código" autocomplete="off" required
+                            {% if not codigo_pendente %}autofocus{% endif %}>
+                        <button class="cadbuttom" type="submit">Ler código</button>
+                    </form>
+
+                    {% if codigo_pendente %}
+                    <form class="pending-form" action="{{ url_for('adicionar_material_lido') }}" method="post">
+                        <p>Código lido: <strong>{{ codigo_pendente }}</strong></p>
+                        <input type="hidden" name="codigo_barras" value="{{ codigo_pendente }}">
+                        <div class="form-row">
+                            <input class="input" type="text" name="nome"
+                                placeholder="Nome do material" required autofocus>
+                            <button class="cadbuttom" type="submit">Cadastrar material</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </article>
+
+                <article class="panel" id="novo-material">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">NOVO CADASTRO</p>
+                            <h2>Adicionar material</h2>
+                        </div>
+                        <span class="panel-mark add-mark"></span>
+                    </div>
+                    <p class="panel-description">Preencha os dados abaixo para incluir um novo item no catálogo.</p>
+
+                    <form class="product-form" action="{{ url_for('adicionar_produto') }}" method="post">
+                        <label class="field-label" for="nome-produto">Nome do material</label>
+                        <input class="input" id="nome-produto" type="text" name="nome"
+                            placeholder="Ex.: Luvas descartáveis" required>
+
+                        <label class="very">
+                            <input type="checkbox" name="tem_barras">
+                            <span>Já possui código de barras</span>
+                        </label>
+
+                        <label class="field-label" for="codigo-original">Código de barras original <span>(opcional)</span></label>
+                        <input class="input" id="codigo-original" type="text" name="codigo_barras"
+                            placeholder="Digite o código de barras">
+
+                        <button class="cadbuttom" type="submit">Cadastrar material</button>
+                    </form>
+                </article>
+            </section>
+
+            <section class="panel catalog-panel" id="catalogo">
+                <div class="panel-heading catalog-heading">
+                    <div>
+                        <p class="eyebrow">INVENTÁRIO</p>
+                        <h2>Materiais cadastrados</h2>
+                    </div>
+                    <label class="search-box" for="busca-produtos">
+                        <span class="search-icon" aria-hidden="true"></span>
+                        <input class="input" id="busca-produtos" type="search"
+                            placeholder="Buscar material..." autocomplete="off">
+                    </label>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nome</th>
+                                <th>Tem código de barras?</th>
+                                <th>Código de barras</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produto in materiais %}
+                            <tr data-produto>
+                                <td><span class="code-badge">{{ produto.codigo }}</span></td>
+                                <td class="product-name">{{ produto.nome }}</td>
+                                <td>
+                                    <span class="barcode-badge {{ 'available' if produto.tem_barras else 'unavailable' }}">
+                                        <span></span>{{ "Sim" if produto.tem_barras else "Não" }}
+                                    </span>
+                                </td>
+                                <td class="barcode-value">{{ produto.codigo_barras }}</td>
+                                <td class="acao">
+                                    <form action="{{ url_for('excluir_material', material_id=produto.id) }}" method="post"
+                                        onsubmit="return confirm('Deseja excluir este material?');">
+                                        <button class="excluir" type="submit">Excluir</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr id="nenhum-produto-encontrado" hidden>
+                                <td colspan="5">Nenhum produto encontrado.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="table-footnote">Os materiais são armazenados localmente neste dispositivo.</p>
+            </section>
+        </main>
     </div>
 
-    {% with mensagens = get_flashed_messages() %}
-        {% for mensagem in mensagens %}
-            <p><strong>{{ mensagem }}</strong></p>
-        {% endfor %}
-    {% endwith %}
-
-    <main class="conteudo">
-        <h2>Leitura de código de barras</h2>
-        <p>Um código já cadastrado exclui o material; um código novo solicita o nome para cadastrá-lo.</p>
-        <p>Para usar a câmera do celular, abra o sistema por uma conexão HTTPS segura.</p>
-        <div class="scanner-camera">
-            <button class="cadbuttom" id="start-camera" type="button">Ler com a câmera</button>
-            <button class="excluir" id="stop-camera" type="button" hidden>Fechar câmera</button>
-            <div id="camera-container" hidden>
-                <div id="barcode-reader"></div>
-            </div>
-            <p id="camera-status" role="status" aria-live="polite"></p>
-        </div>
-        <form id="barcode-form" action="{{ url_for('ler_codigo_barras') }}" method="post">
-            <input class="input" id="barcode-input" type="text" name="codigo_barras"
-                placeholder="Leia o código de barras" autocomplete="off" required
-                {% if not codigo_pendente %}autofocus{% endif %}>
-            <button class="cadbuttom" type="submit">Ler código</button>
-        </form>
-
-        {% if codigo_pendente %}
-        <form action="{{ url_for('adicionar_material_lido') }}" method="post">
-            <p>Código lido: <strong>{{ codigo_pendente }}</strong></p>
-            <input type="hidden" name="codigo_barras" value="{{ codigo_pendente }}">
-            <input class="input" type="text" name="nome"
-                placeholder="Nome do material" required autofocus>
-            <button class="cadbuttom" type="submit">Cadastrar material lido</button>
-        </form>
-        {% endif %}
-
-        <h2>Adicionar produto</h2>
-        <form action="{{ url_for('adicionar_produto') }}" method="post">
-            <input  class="input" type="text" name="nome" placeholder="Nome do produto" required>
-
-            <label >
-                <input class="very" type="checkbox" name="tem_barras"> Já possui código de barras
-            </label>
-
-            <input class="input" type="text" name="codigo_barras" placeholder="Código de barras original">
-
-            <button class="cadbuttom" type="submit">Cadastrar</button>
-        </form>
-
-        <h2>Produtos cadastrados</h2>
-        <table class="table" border="1" cellpadding="6">
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Nome</th>
-                    <th>Tem código de barras?</th>
-                    <th>Código de barras</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for produto in materiais %}
-                <tr>
-                    <td>{{ produto.codigo }}</td>
-                    <td>{{ produto.nome }}</td>
-                    <td>{{ "Sim" if produto.tem_barras else "Não" }}</td>
-                    <td>{{ produto.codigo_barras }}</td>
-                    <td>
-                        <form action="{{ url_for('excluir_material', material_id=produto.id) }}" method="post"
-                            onsubmit="return confirm('Deseja excluir este material?');">
-                            <button class="excluir" type="submit">Excluir</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <p>Total: {{ materiais|length }}</p>
-    </main>
-
-
-    <script defer src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script async src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script defer src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>

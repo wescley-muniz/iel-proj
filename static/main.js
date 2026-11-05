@@ -6,6 +6,41 @@ const startCameraButton = document.getElementById("start-camera");
 const stopCameraButton = document.getElementById("stop-camera");
 const cameraContainer = document.getElementById("camera-container");
 const cameraStatus = document.getElementById("camera-status");
+const productSearch = document.getElementById("busca-produtos");
+const productRows = document.querySelectorAll("[data-produto]");
+const noProductsFound = document.getElementById("nenhum-produto-encontrado");
+const themeToggle = document.getElementById("theme-toggle");
+const themeLabel = themeToggle.querySelector(".theme-label");
+const themeStorageKey = "iel-proj-theme";
+
+let savedTheme = null;
+try {
+    savedTheme = localStorage.getItem(themeStorageKey);
+} catch (error) {
+    console.error("Não foi possível carregar a preferência de tema:", error);
+}
+document.documentElement.dataset.theme = savedTheme === "light" ? "light" : "dark";
+
+function updateThemeToggle(theme) {
+    const isLight = theme === "light";
+    const nextThemeLabel = isLight ? "Tema escuro" : "Tema claro";
+    themeLabel.textContent = nextThemeLabel;
+    themeToggle.title = `Alternar para ${nextThemeLabel.toLowerCase()}`;
+    themeToggle.setAttribute("aria-label", themeToggle.title);
+}
+
+updateThemeToggle(document.documentElement.dataset.theme);
+
+function setTheme(theme) {
+    const isLight = theme === "light";
+    document.documentElement.dataset.theme = isLight ? "light" : "dark";
+    updateThemeToggle(theme);
+    try {
+        localStorage.setItem(themeStorageKey, isLight ? "light" : "dark");
+    } catch (error) {
+        console.error("Não foi possível salvar a preferência de tema:", error);
+    }
+}
 
 let scanner = null;
 let cameraRunning = false;
@@ -102,3 +137,35 @@ stopCameraButton.addEventListener("click", async () => {
         showCameraStatus(`Não foi possível fechar a câmera: ${error.message}`);
     }
 });
+
+function normalizeSearchText(text) {
+    return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+productSearch.addEventListener("input", () => {
+    const searchTerm = normalizeSearchText(productSearch.value.trim());
+    let visibleProducts = 0;
+
+    productRows.forEach((row) => {
+        const productName = normalizeSearchText(row.cells[1].textContent || "");
+        const matches = productName.includes(searchTerm);
+        row.hidden = !matches;
+        if (matches) {
+            visibleProducts += 1;
+        }
+    });
+
+    noProductsFound.hidden = !searchTerm || visibleProducts > 0;
+});
+
+    themeToggle.addEventListener("click", () => {
+        const nextTheme = document.documentElement.dataset.theme === "light"
+            ? "dark"
+            : "light";
+        setTheme(nextTheme);
+    });
+
+    window.alert = function (message) {
+    const alertBox = document.createElement("jan");
+    alertBox.className = "custom-alert";
+    alertBox.textContent = message;}
