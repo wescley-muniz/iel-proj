@@ -17,7 +17,7 @@ O comportamento atual do sistema depende da existência do código no banco de d
 - **Código já cadastrado:** o material correspondente é excluído.
 - **Código ainda não cadastrado:** o sistema solicita o nome do material para realizar o cadastro.
 
-> **Importante:** o sistema gerencia cadastros de materiais, mas ainda não realiza controle de quantidades, entradas, saídas ou saldo de estoque. A leitura de um código já cadastrado provoca a exclusão do registro, e não uma baixa de estoque.
+> **Importante:** ler um código de barras já cadastrado exclui o material correspondente. Ao ler um código novo, o sistema solicita o nome do material para cadastrá-lo. O sistema mantém um cadastro de materiais, mas não controla as quantidades em estoque.
 
 ## 🛠️ Tecnologias utilizadas
 
