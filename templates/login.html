@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f8f3f0">
+    <title>Login | Sistema de Materiais</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/icone (2).png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+</head>
+<body class="login-page">
+    <main class="login-layout">
+        <section class="login-card" aria-labelledby="login-title">
+            <header class="login-brand">
+                <img class="login-logo" src="{{ url_for('static', filename='img/logo.hp.png') }}" alt="IEL Hospital Português">
+                <span class="brand-caption">CONTROLE DE MATERIAIS</span>
+            </header>
+
+            <div class="login-intro">
+                <p class="eyebrow">BEM-VINDO(A)</p>
+                <h1 id="login-title">Acesse sua conta</h1>
+                <p class="intro-copy">Entre com seus dados para continuar.</p>
+            </div>
+
+            <form class="login-form" aria-label="Formulário visual de login">
+                <div class="form-field">
+                    <label for="email">E-mail</label>
+                    <input id="email" name="email" type="email" placeholder="nome@exemplo.com" autocomplete="username" required>
+                </div>
+
+                <div class="form-field">
+                    <div class="password-label-row">
+                        <label for="password">Senha</label>
+                        <a class="text-link" href="#" aria-label="Ajuda para recuperar a senha">Esqueceu a senha?</a>
+                    </div>
+                    <input id="password" name="password" type="password" placeholder="Digite sua senha" autocomplete="current-password" required>
+                </div>
+
+                <label class="remember-option">
+                    <input type="checkbox" name="remember">
+                    <span>Manter conectado</span>
+                </label>
+
+                <button class="login-button" type="button">Entrar <span aria-hidden="true">→</span></button>
+            </form>
+
+            <p class="login-note">Acesso ao sistema de gestão de materiais</p>
+        </section>
+
+        <aside class="login-aside" aria-label="Informações do sistema">
+            <div class="aside-content">
+                <span class="aside-mark" aria-hidden="true">+</span>
+                <p class="aside-kicker">ORGANIZAÇÃO E CUIDADO</p>
+                <h2>Materiais sempre sob controle.</h2>
+                <p>Uma maneira simples de acompanhar os materiais e manter seu cadastro organizado.</p>
+            </div>
+            <span class="aside-footer">SISTEMA DE MATERIAIS</span>
+        </aside>
+    </main>
+</body>
+</html>
