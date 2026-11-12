@@ -1,55 +1,96 @@
-# 📦 Sistema de Materiais
+# Sistema de Materiais
 
-Aplicação web local desenvolvida em **Python e Flask** para cadastrar, consultar e gerenciar materiais por meio de uma interface simples e intuitiva. Os dados são armazenados localmente em um banco de dados **SQLite**, permitindo que os cadastros sejam mantidos entre as execuções do sistema.
+Aplicação web local desenvolvida em Python com Flask para gerenciar um cadastro de materiais em ambiente de uso interno. O sistema permite cadastrar itens, escanear códigos de barras, manter o catálogo organizado e controlar o acesso por meio de login de usuário.
 
-## ✨ Funcionalidades
+## Visão geral
 
-- 📋 **Listagem de materiais:** visualizar os materiais cadastrados.
-- ➕ **Cadastro manual:** adicionar novos materiais informando seus dados.
-- 📷 **Leitura de códigos de barras:** digitar o código ou utilizar a câmera do dispositivo.
-- 🗑️ **Exclusão de materiais:** remover um cadastro pelo botão disponível na lista ou pela leitura do código de barras correspondente.
-- 🔐 **Contas de usuário:** criar uma conta com e-mail e senha e entrar para acessar o sistema.
-- 💾 **Armazenamento local:** salvar os dados no banco SQLite, localizado em `instance/materiais.sqlite3`.
+O projeto foi pensado para uso local em um computador ou rede interna simples. Ele salva os dados em um banco SQLite dentro da pasta `instance`, mantendo o catálogo disponível entre execuções da aplicação.
 
-As senhas são armazenadas como hashes no banco de dados. O catálogo de materiais continua compartilhado entre as contas desta instalação local.
+A aplicação oferece:
 
-## ⚠️ Como funciona a leitura de códigos de barras
+- cadastro e autenticação de usuários;
+- listagem de materiais em uma interface simples;
+- inclusão manual de produtos e códigos;
+- leitura de código de barras por entrada manual ou câmera do navegador;
+- exclusão de materiais por leitura do código ou pela ação direta na tela;
+- geração automática de código de barras para materiais que não possuem um valor informado.
 
-O comportamento atual do sistema depende da existência do código no banco de dados:
+## Funcionalidades
 
-- **Código já cadastrado:** o material correspondente é excluído.
-- **Código ainda não cadastrado:** o sistema solicita o nome do material para realizar o cadastro.
+- Cadastro de conta com e-mail e senha;
+- Login e logout com sessão autenticada;
+- Proteção de rotas para usuários não autenticados;
+- Listagem completa dos materiais cadastrados;
+- Cadastro manual de produto com nome, código de barras e flag de itens com barras;
+- Geração automática de código de barras para itens sem código cadastrado;
+- Leitura de código de barras já existente para exclusão do material;
+- Cadastro de material novo quando o código lido ainda não está no banco;
+- Armazenamento seguro de senhas com hash via `Werkzeug`;
+- Proteção CSRF em requisições POST.
 
-> **Importante:** ler um código de barras já cadastrado exclui o material correspondente. Ao ler um código novo, o sistema solicita o nome do material para cadastrá-lo. O sistema mantém um cadastro de materiais, mas não controla as quantidades em estoque.
+## Como funciona a leitura de código de barras
 
-## 🛠️ Tecnologias utilizadas
+A lógica atual do sistema considera o código de barras da seguinte forma:
 
-- **Python** — linguagem de programação.
-- **Flask** — framework para a aplicação web.
-- **SQLite** — banco de dados local.
-- **HTML, CSS e JavaScript** — estrutura, estilos e interatividade da interface.
+- se o código já existe no banco, o material correspondente é removido do cadastro;
+- se o código ainda não existe, o usuário é solicitado a informar o nome do material para cadastrar o novo item.
 
-## 🚀 Como executar localmente
+> Importante: a leitura de um código de barras já cadastrado exclui o material relacionado. Isso é uma regra do fluxo atual da aplicação e não um controle de estoque.
 
-### 1. Pré-requisitos
+## Tecnologias
 
-- Python instalado no computador.
-- Um navegador atualizado.
-- Conexão com a internet para carregar a biblioteca utilizada na leitura pela câmera.
+- Python
+- Flask
+- SQLite
+- HTML
+- CSS
+- JavaScript
+- Werkzeug (hash de senhas e utilitários do Flask)
 
-### 2. Abra a pasta do projeto
+## Estrutura do projeto
 
-Abra o terminal no diretório em que os arquivos do projeto estão localizados.
+```text
+iel-proj/
+├── app.py
+├── static/
+│   ├── css/
+│   └── js/
+├── templates/
+│   ├── login.html
+│   ├── register.html
+│   └── main.html
+├── instance/
+│   ├── materiais.sqlite3
+│   └── secret_key
+├── .gitignore
+└── README.md
+```
 
-### 3. Crie um ambiente virtual
+A pasta `instance` é criada automaticamente quando a aplicação inicia. Ela contém o banco de dados local e a chave de sessão usada pela aplicação.
 
-No Windows, execute:
+## Requisitos
+
+- Python 3.8 ou superior
+- Navegador moderno
+- Acesso à câmera do navegador, quando for usar a leitura pela webcam
+
+## Execução local
+
+### 1. Clone ou abra o projeto
+
+Entre na pasta do repositório:
+
+```powershell
+cd C:\caminho\para\iel-proj
+```
+
+### 2. Crie um ambiente virtual
 
 ```powershell
 python -m venv .venv
 ```
 
-### 4. Ative o ambiente virtual
+### 3. Ative o ambiente virtual
 
 No PowerShell:
 
@@ -57,68 +98,48 @@ No PowerShell:
 .\.venv\Scripts\Activate.ps1
 ```
 
-Se estiver utilizando o Prompt de Comando (CMD), execute:
+No CMD:
 
 ```cmd
 .venv\Scripts\activate.bat
 ```
 
-### 5. Instale o Flask
-
-Com o ambiente virtual ativado, execute:
+### 4. Instale as dependências
 
 ```powershell
 python -m pip install Flask
 ```
 
-### 6. Inicie a aplicação
-
-Execute:
+### 5. Inicie a aplicação
 
 ```powershell
 python app.py
 ```
 
-### 7. Acesse o sistema
+### 6. Acesse a interface
 
-Abra o navegador e entre no endereço:
-
-**http://127.0.0.1:5000**
-
-Na primeira visita, selecione **Cadastre-se** para criar uma conta com e-mail e senha de pelo menos 8 caracteres. Depois, entre com esses dados. A chave das sessões é criada automaticamente em `instance/secret_key`; não compartilhe nem publique esse arquivo.
-
-Para encerrar a aplicação, volte ao terminal e pressione `Ctrl + C`.
-
-## 📷 Leitura de códigos de barras pela câmera
-
-Para utilizar a câmera, permita o acesso quando o navegador solicitar.
-
-- **Acesso local:** a câmera geralmente funciona em `localhost` ou `127.0.0.1`.
-- **HTTPS:** em dispositivos acessando a aplicação por outro computador ou celular, normalmente é necessário utilizar uma conexão HTTPS segura.
-- **Internet:** a biblioteca JavaScript utilizada pelo leitor precisa ser carregada. Portanto, a leitura pela câmera pode depender de uma conexão com a internet.
-
-Caso a câmera não funcione, verifique as permissões do navegador, a conexão com a internet e a disponibilidade da biblioteca de leitura.
-
-## 💾 Armazenamento dos dados
-
-O banco de dados é armazenado localmente em:
+Abra o navegador e acesse:
 
 ```text
-instance/
-└── materiais.sqlite3
+http://127.0.0.1:5000
 ```
 
-Os dados permanecem salvos nesse arquivo mesmo após o encerramento da aplicação. Para evitar a perda dos cadastros, faça cópias de segurança do banco de dados periodicamente.
+Na primeira vez, clique em "Cadastre-se" para criar uma conta com e-mail e senha de pelo menos 8 caracteres. Em seguida, faça login para acessar o sistema.
 
-## 🔒 Observações
+## Observações importantes
 
-- A aplicação foi projetada para execução local.
-- Os dados são armazenados no computador em que o sistema é executado.
-- A exclusão de um material remove seu cadastro do banco de dados.
-- Antes de realizar alterações ou excluir registros, recomenda-se manter uma cópia de segurança do banco de dados.
+- O sistema foi desenvolvido para uso local.
+- As credenciais são armazenadas com hash, não em texto puro.
+- O banco de dados e a chave de sessão ficam na pasta `instance`.
+- A leitura pela câmera depende das permissões do navegador e da disponibilidade da biblioteca JavaScript do scanner.
+- A aplicação não implementa controle de estoque ou movimentação de materiais; ela funciona como catálogo e cadastro de itens.
 
----
+## Dicas de uso
 
-python -m pip install -r requirements.txt
+- Mantenha cópias de segurança do arquivo `instance/materiais.sqlite3` periodicamente.
+- Se a câmera não funcionar, verifique permissões do navegador e acesso local via `localhost` ou `127.0.0.1`.
+- Não compartilhe ou publique o arquivo `instance/secret_key`.
 
-**Projeto em desenvolvimento.** Novas funcionalidades e melhorias poderão ser adicionadas conforme as necessidades de uso.
+## Status do projeto
+
+Projeto em desenvolvimento e em uso local, com foco em registrar materiais e simplificar a gestão operacional do catálogo.
