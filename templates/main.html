@@ -64,7 +64,7 @@
             {% set materiais_com_codigo = materiais | map(attribute='tem_barras') | sum %}
             <section class="stats-grid" aria-label="Resumo dos materiais">
                 <article class="stat-card">
-                    <div class="stat-icon blue-icon">M</div>
+                    <div class="stat-icon blue-icon">T</div>
                     <div>
                         <p>Total de materiais</p>
                         <strong>{{ materiais | length }}</strong>
