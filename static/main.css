@@ -932,6 +932,10 @@ input:focus-visible {
     gap: 10px;
 }
 
+.logout-form {
+    margin: 0;
+}
+
 .theme-toggle {
     display: inline-flex;
     min-height: 36px;

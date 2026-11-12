@@ -8,7 +8,10 @@ Aplicação web local desenvolvida em **Python e Flask** para cadastrar, consult
 - ➕ **Cadastro manual:** adicionar novos materiais informando seus dados.
 - 📷 **Leitura de códigos de barras:** digitar o código ou utilizar a câmera do dispositivo.
 - 🗑️ **Exclusão de materiais:** remover um cadastro pelo botão disponível na lista ou pela leitura do código de barras correspondente.
+- 🔐 **Contas de usuário:** criar uma conta com e-mail e senha e entrar para acessar o sistema.
 - 💾 **Armazenamento local:** salvar os dados no banco SQLite, localizado em `instance/materiais.sqlite3`.
+
+As senhas são armazenadas como hashes no banco de dados. O catálogo de materiais continua compartilhado entre as contas desta instalação local.
 
 ## ⚠️ Como funciona a leitura de códigos de barras
 
@@ -82,6 +85,8 @@ Abra o navegador e entre no endereço:
 
 **http://127.0.0.1:5000**
 
+Na primeira visita, selecione **Cadastre-se** para criar uma conta com e-mail e senha de pelo menos 8 caracteres. Depois, entre com esses dados. A chave das sessões é criada automaticamente em `instance/secret_key`; não compartilhe nem publique esse arquivo.
+
 Para encerrar a aplicação, volte ao terminal e pressione `Ctrl + C`.
 
 ## 📷 Leitura de códigos de barras pela câmera
@@ -117,4 +122,3 @@ Os dados permanecem salvos nesse arquivo mesmo após o encerramento da aplicaç�
 python -m pip install -r requirements.txt
 
 **Projeto em desenvolvimento.** Novas funcionalidades e melhorias poderão ser adicionadas conforme as necessidades de uso.
-

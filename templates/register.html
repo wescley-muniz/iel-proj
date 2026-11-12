@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f8f3f0">
+    <title>Criar conta | Sistema de Materiais</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/icone (2).png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+</head>
+<body class="login-page">
+    <main class="login-layout">
+        <section class="login-card" aria-labelledby="register-title">
+            <header class="login-brand">
+                <img class="login-logo" src="{{ url_for('static', filename='img/logo.hp.png') }}" alt="IEL Hospital Português">
+                <span class="brand-caption">CONTROLE DE MATERIAIS</span>
+            </header>
+
+            <div class="login-intro">
+                <p class="eyebrow">NOVO ACESSO</p>
+                <h1 id="register-title">Crie sua conta</h1>
+                <p class="intro-copy">Cadastre seu e-mail e escolha uma senha com pelo menos 8 caracteres.</p>
+            </div>
+
+            {% with mensagens = get_flashed_messages() %}
+                {% if mensagens %}
+                <div class="auth-messages" role="status" aria-live="polite">
+                    {% for mensagem in mensagens %}
+                    <p>{{ mensagem }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            <form class="login-form" action="{{ url_for('cadastro') }}" method="post">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <div class="form-field">
+                    <label for="email">E-mail</label>
+                    <input id="email" name="email" type="email" placeholder="nome@exemplo.com" autocomplete="email" maxlength="254" required>
+                </div>
+
+                <div class="form-field">
+                    <label for="password">Senha</label>
+                    <input id="password" name="password" type="password" placeholder="Mínimo de 8 caracteres" autocomplete="new-password" minlength="8" required>
+                </div>
+
+                <div class="form-field">
+                    <label for="confirm-password">Confirme a senha</label>
+                    <input id="confirm-password" name="confirm_password" type="password" placeholder="Digite a senha novamente" autocomplete="new-password" minlength="8" required>
+                </div>
+
+                <button class="login-button" type="submit">Criar conta <span aria-hidden="true">→</span></button>
+            </form>
+
+            <p class="account-prompt">Já tem uma conta? <a href="{{ url_for('login') }}">Entrar</a></p>
+            <p class="login-note">Acesso ao sistema de gestão de materiais</p>
+        </section>
+
+        <aside class="login-aside" aria-label="Informações do sistema">
+            <div class="aside-content">
+                <span class="aside-mark" aria-hidden="true">+</span>
+                <p class="aside-kicker">ORGANIZAÇÃO E CUIDADO</p>
+                <h2>Materiais sempre sob controle.</h2>
+                <p>Uma maneira simples de acompanhar os materiais e manter seu cadastro organizado.</p>
+            </div>
+            <span class="aside-footer">SISTEMA DE MATERIAIS</span>
+        </aside>
+    </main>
+</body>
+</html>

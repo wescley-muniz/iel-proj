@@ -1,10 +1,30 @@
+import hmac
 import os
+import re
+import secrets
 import sqlite3
 
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import (
+    Flask,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
-app.secret_key = "troque-esta-chave"  # necessária para usar flash()
+os.makedirs(app.instance_path, exist_ok=True)
+secret_key_path = os.path.join(app.instance_path, "secret_key")
+try:
+    with open(secret_key_path, "x", encoding="utf-8") as secret_key_file:
+        secret_key_file.write(secrets.token_hex(32))
+except FileExistsError:
+    pass
+with open(secret_key_path, encoding="utf-8") as secret_key_file:
+    app.secret_key = secret_key_file.read()
 app.config["DATABASE"] = os.path.join(app.instance_path, "materiais.sqlite3")
 
 materiais_iniciais = [
@@ -63,6 +83,13 @@ def inicializar_banco():
     connection = conectar_banco()
     try:
         with connection:
+            connection.execute("""
+                CREATE TABLE IF NOT EXISTS usuarios (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    email TEXT NOT NULL COLLATE NOCASE UNIQUE,
+                    senha_hash TEXT NOT NULL
+                )
+            """)
             connection.execute("""
                 CREATE TABLE IF NOT EXISTS materiais (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -129,7 +156,114 @@ def listar_materiais():
 
 inicializar_banco()
 
-@app.route("/")
+def csrf_token():
+    token = session.get("_csrf_token")
+    if token is None:
+        token = secrets.token_urlsafe(32)
+        session["_csrf_token"] = token
+    return token
+
+
+@app.context_processor
+def disponibilizar_csrf_token():
+    return {"csrf_token": csrf_token}
+
+
+@app.before_request
+def proteger_rotas():
+    if request.method == "POST":
+        token = session.get("_csrf_token", "")
+        token_enviado = request.form.get("_csrf_token", "")
+        if not token or not hmac.compare_digest(token, token_enviado):
+            return "Token de segurança inválido. Atualize a página e tente novamente.", 400
+
+    if request.endpoint in {"login", "cadastro", "static"} or request.endpoint is None:
+        return None
+
+    if "usuario_id" not in session:
+        flash("Entre na sua conta para acessar o sistema.")
+        return redirect(url_for("login"))
+
+
+@app.route("/", methods=["GET", "POST"])
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if "usuario_id" in session:
+        return redirect(url_for("inicio"))
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        senha = request.form.get("password", "")
+        connection = conectar_banco()
+        try:
+            usuario = connection.execute(
+                "SELECT id, senha_hash FROM usuarios WHERE email = ?",
+                (email,),
+            ).fetchone()
+        finally:
+            connection.close()
+
+        if usuario is None or not check_password_hash(usuario["senha_hash"], senha):
+            flash("E-mail ou senha incorretos.")
+            return redirect(url_for("login"))
+
+        session.clear()
+        session["usuario_id"] = usuario["id"]
+        return redirect(url_for("inicio"))
+
+    return render_template("login.html")
+
+
+@app.route("/cadastro", methods=["GET", "POST"])
+def cadastro():
+    if "usuario_id" in session:
+        return redirect(url_for("inicio"))
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        senha = request.form.get("password", "")
+        confirmar_senha = request.form.get("confirm_password", "")
+
+        if (
+            len(email) > 254
+            or re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email) is None
+        ):
+            flash("Informe um e-mail válido.")
+            return redirect(url_for("cadastro"))
+        if len(senha) < 8:
+            flash("A senha deve ter pelo menos 8 caracteres.")
+            return redirect(url_for("cadastro"))
+        if senha != confirmar_senha:
+            flash("As senhas não conferem.")
+            return redirect(url_for("cadastro"))
+
+        connection = conectar_banco()
+        try:
+            with connection:
+                connection.execute(
+                    "INSERT INTO usuarios (email, senha_hash) VALUES (?, ?)",
+                    (email, generate_password_hash(senha)),
+                )
+        except sqlite3.IntegrityError:
+            flash("Já existe uma conta com esse e-mail.")
+            return redirect(url_for("cadastro"))
+        finally:
+            connection.close()
+
+        flash("Conta criada. Entre com seu e-mail e sua senha.")
+        return redirect(url_for("login"))
+
+    return render_template("register.html")
+
+
+@app.route("/sair", methods=["POST"])
+def logout():
+    session.clear()
+    flash("Você saiu da sua conta.")
+    return redirect(url_for("login"))
+
+
+@app.route("/materiais")
 def inicio():
     materiais = listar_materiais()
     return render_template("main.html", materiais=materiais)

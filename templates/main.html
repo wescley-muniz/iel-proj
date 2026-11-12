@@ -39,6 +39,10 @@
                         <span class="theme-label">Tema claro</span>
                     </button>
                     <span class="system-status"><span class="status-dot"></span>Sistema ativo</span>
+                    <form class="logout-form" action="{{ url_for('logout') }}" method="post">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                        <button class="theme-toggle" type="submit">Sair</button>
+                    </form>
                 </div>
             </header>
 
@@ -113,6 +117,7 @@
                     </div>
 
                     <form class="form-row" id="barcode-form" action="{{ url_for('ler_codigo_barras') }}" method="post">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                         <input class="input" id="barcode-input" type="text" name="codigo_barras"
                             placeholder="Leia ou digite o código" autocomplete="off" required
                             {% if not codigo_pendente %}autofocus{% endif %}>
@@ -121,6 +126,7 @@
 
                     {% if codigo_pendente %}
                     <form class="pending-form" action="{{ url_for('adicionar_material_lido') }}" method="post">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                         <p>Código lido: <strong>{{ codigo_pendente }}</strong></p>
                         <input type="hidden" name="codigo_barras" value="{{ codigo_pendente }}">
                         <div class="form-row">
@@ -143,6 +149,7 @@
                     <p class="panel-description">Preencha os dados abaixo para incluir um novo item no catálogo.</p>
 
                     <form class="product-form" action="{{ url_for('adicionar_produto') }}" method="post">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                         <label class="field-label" for="nome-produto">Nome do material</label>
                         <input class="input" id="nome-produto" type="text" name="nome"
                             placeholder="Ex.: Luvas descartáveis" required>
@@ -199,6 +206,7 @@
                                 <td class="acao">
                                     <form action="{{ url_for('excluir_material', material_id=produto.id) }}" method="post"
                                         onsubmit="return confirm('Deseja excluir este material?');">
+                                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                         <button class="excluir" type="submit">Excluir</button>
                                     </form>
                                 </td>
